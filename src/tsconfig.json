@@ -5,5 +5,8 @@
     "moduleResolution": "node",
     "declaration": true,
     "outDir": "../"
-  }
+  },
+  "files": [
+    "./index.ts"
+  ]
 }
