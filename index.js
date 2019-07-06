@@ -47,6 +47,9 @@ class SMSAPI {
                     if (body.error) {
                         return reject(body);
                     }
+                    if (res.statusCode !== 200) {
+                        return reject(new Error(`status code:${res.statusCode}, body:${body}`));
+                    }
                     let result = this.processResponce(body.result);
                     resolve(result);
                 });

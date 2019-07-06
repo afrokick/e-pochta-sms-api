@@ -1,10 +1,10 @@
- import request = require("request");
- import md5 = require("md5");
- 
- interface IEPochtaError {
-    error:string;
-    code:string;
-    result:string;
+import request = require("request");
+import md5 = require("md5");
+
+interface IEPochtaError {
+    error: string;
+    code: string;
+    result: string;
 }
 
 export interface ISMSAPIOptions {
@@ -16,15 +16,15 @@ export interface ISMSAPIOptions {
 }
 
 interface IParams {
-    version:string;
-    action:string;
-    publicKey:string;
-    [name:string]:any;
+    version: string;
+    action: string;
+    publicKey: string;
+    [name: string]: any;
 }
 
 interface IEPochtaListResponse {
-    [idx:number]:{[key:string]:any};
-    total:number;
+    [idx: number]: { [key: string]: any };
+    total: number;
 }
 
 export class SMSAPI {
@@ -32,8 +32,8 @@ export class SMSAPI {
     private static DEFAULT_VERSION = "3.0";
     // private static URL = `http://api.myatompark.com/sms/${EPochtaServiceBase.VERSION}`;
 
-    private publicKey:string;
-    private privateKey:string;
+    private publicKey: string;
+    private privateKey: string;
     private url: string;
     private version: string;
     private testMode: boolean;
@@ -50,7 +50,7 @@ export class SMSAPI {
         return str.replace(/\/$/, "");
     }
 
-    private calcMD5(params:IParams) {
+    private calcMD5(params: IParams) {
         let keys = Object.keys(params);
         let result = '';
         keys.sort();
@@ -69,14 +69,14 @@ export class SMSAPI {
         return md5(result);
     }
 
-    private request<T>(params:IParams) {
+    private request<T>(params: IParams) {
         return new Promise<T>((resolve, reject) => {
             try {
                 request.post({
-                        url: `${this.url}/${this.version}/${params.action}`,
-                        json: true,
-                        form: params
-                    },
+                    url: `${this.url}/${this.version}/${params.action}`,
+                    json: true,
+                    form: params
+                },
                     (err, res, body) => {
                         if (err) {
                             return reject(err);
@@ -85,10 +85,15 @@ export class SMSAPI {
                         if (body.error) {
                             return reject(body);
                         }
+
+                        if (res.statusCode !== 200) {
+                            return reject(new Error(`status code:${res.statusCode}, body:${body}`));
+                        }
+
                         let result = this.processResponce(body.result);
                         resolve(result);
                     });
-            }catch (err){
+            } catch (err) {
                 reject(err);
             }
         });
@@ -96,8 +101,8 @@ export class SMSAPI {
 
     //we need this for proper md5 sum
     private sanitizeParams(params) {
-        for(let key in params) {
-            if(params.hasOwnProperty(key) && params[key] == undefined){
+        for (let key in params) {
+            if (params.hasOwnProperty(key) && params[key] == undefined) {
                 params[key] = '';
             }
         }
@@ -108,7 +113,7 @@ export class SMSAPI {
         let fields = result.fields;
         let processedResult = [];
 
-        Object.defineProperty(processedResult, 'total', {enumerable: false, value: result.count});
+        Object.defineProperty(processedResult, 'total', { enumerable: false, value: result.count });
         result.data.forEach((item) => {
             let processedItem = {};
             fields.forEach((field, index) => {
@@ -120,7 +125,7 @@ export class SMSAPI {
     }
 
     send<T>(action, params) {
-        if(this.testMode){ params.testMode = true;}
+        if (this.testMode) { params.testMode = true; }
         Object.assign(params, {
             action: action,
             version: this.version,
@@ -128,76 +133,78 @@ export class SMSAPI {
         });
         this.sanitizeParams(params);
         let sum = this.calcMD5(params);
-        Object.assign(params, {sum: sum});
+        Object.assign(params, { sum: sum });
         return this.request<T>(params);
     }
 }
 
 export class Addressbook {
 
-    constructor(private gateway: SMSAPI){}
+    constructor(private gateway: SMSAPI) { }
 
-    addAddressbook(params:{name:string, description?:string}) {
-        return this.gateway.send<{result:{addressbook_id:number}}>('addAddressbook', params);
+    addAddressbook(params: { name: string, description?: string }) {
+        return this.gateway.send<{ result: { addressbook_id: number } }>('addAddressbook', params);
     }
 
-    delAddressbook(params:{idAddressBook:number}) {
+    delAddressbook(params: { idAddressBook: number }) {
         return this.gateway.send('delAddressbook', params);
     }
 
-    editAddressbook(params:{idAddressBook:number, newName: string, newDescr: string}) {
+    editAddressbook(params: { idAddressBook: number, newName: string, newDescr: string }) {
         return this.gateway.send('editAddressbook', params);
     }
 
-    getAddressbook(params:{idAddressBook?:number, from?:number, offset?:number}): any {
+    getAddressbook(params: { idAddressBook?: number, from?: number, offset?: number }): any {
         return this.gateway.send('getAddressbook', params);
     }
 
-    searchAddressBook(params:{searchFields?:any, from?: number, offset?: number}) {
+    searchAddressBook(params: { searchFields?: any, from?: number, offset?: number }) {
         return this.gateway.send('searchAddressBook', params);
     }
 
-    cloneaddressbook(params: {idAddressBook: number}){
+    cloneaddressbook(params: { idAddressBook: number }) {
         return this.gateway.send('cloneaddressbook', params);
     }
 
-    addPhoneToAddressBook(params: {idAddressBook: number, phone: number, variables?: string}){
+    addPhoneToAddressBook(params: { idAddressBook: number, phone: number, variables?: string }) {
         return this.gateway.send('addPhoneToAddressBook', params);
     }
 
     //TODO: check if method exists. It called 'addPhonesToAddressBook' in documentation
-    addPhonesToAddressBook(params: {idAddressBook: number, data: { phone: number, variables?: string}}){
+    addPhonesToAddressBook(params: { idAddressBook: number, data: { phone: number, variables?: string } }) {
         return this.gateway.send('addPhonesToAddressBook', params);
     }
 
-    getPhoneFromAddressBook(params: {idAddressBook?: number, idPhone?: number, phone?: number, from?: number, offset?: number}){
+    getPhoneFromAddressBook(params: { idAddressBook?: number, idPhone?: number, phone?: number, from?: number, offset?: number }) {
         return this.gateway.send('getPhoneFromAddressBook', params);
     }
 
-    delPhoneFromAddressBook(params: {idAddressBook: number, idPhone: number[]}){
+    delPhoneFromAddressBook(params: { idAddressBook: number, idPhone: number[] }) {
         return this.gateway.send('delPhoneFromAddressBook', params);
     }
 
-    delphonefromaddressbookgroup(params: {idPhones: number[]}){
+    delphonefromaddressbookgroup(params: { idPhones: number[] }) {
         return this.gateway.send('delphonefromaddressbookgroup', params);
     }
 
-    editPhone(params: {idPhone: number, phone: string, variables: string}){
+    editPhone(params: { idPhone: number, phone: string, variables: string }) {
         return this.gateway.send('addPhoneToAddressBook', params);
     }
 
-    searchPhones(params: {searchFields: any, from: number, offset: number}){
+    searchPhones(params: { searchFields: any, from: number, offset: number }) {
         return this.gateway.send('searchPhones', params);
     }
 }
 
 export class Stat {
 
-    constructor(private gateway: SMSAPI) {}
+    constructor(private gateway: SMSAPI) { }
 
     //dateTime example 2012-05-01 00:20:00
-    createCampaign(params: {sender?: string, text?: string, list_id?: number, datetime?: string,
-        batch?: number, batchinterval?: number, sms_lifetime?: number, control_phone?: number}){
+    createCampaign(params: {
+        sender?: string, text?: string, list_id?: number, datetime?: string,
+        batch?: number, batchinterval?: number, sms_lifetime?: number, control_phone?: number
+    }) {
         params.batch = params.batch || 0;
         params.batchinterval = params.batchinterval || 0;
 
@@ -205,12 +212,12 @@ export class Stat {
     }
 
     //dateTime example 2012-05-01 00:20:00
-    sendSMS(params: {sender: string, text?: string, phone?: string, datetime?: string, sms_lifetime?: number}){
+    sendSMS(params: { sender: string, text?: string, phone?: string, datetime?: string, sms_lifetime?: number }) {
         return this.gateway.send('sendSMS', params);
     }
 
     //dateTime example 2012-05-01 00:20:00
-    sendSMSGroup(params: {sender?: string, text?: string, phones?: number[], datetime?: string, sms_lifetime?: number}){
+    sendSMSGroup(params: { sender?: string, text?: string, phones?: number[], datetime?: string, sms_lifetime?: number }) {
         return this.gateway.send('sendsmsgroup', params);
     }
 }

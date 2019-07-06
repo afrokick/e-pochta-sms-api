@@ -1,21 +1,22 @@
 {
   "name": "e-pochta-sms-api",
-  "version": "0.0.4",
+  "version": "1.0.0",
   "description": "Node wrapper for ePochta API(https://www.epochta.com.ua/products/sms/v3.php)",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/maozedong/e-pochta-sms-api.git"
+    "url": "git+https://github.com/afrokick/e-pochta-sms-api.git"
   },
   "bugs": {
-    "url": "https://github.com/maozedong/e-pochta-sms-api/issues"
+    "url": "https://github.com/afrokick/e-pochta-sms-api/issues"
   },
   "engines": {
     "node": ">=4.x"
   },
-  "homepage": "https://github.com/maozedong/e-pochta-sms-api#readme",
+  "homepage": "https://github.com/afrokick/e-pochta-sms-api#readme",
   "main": "index.js",
   "typings": "./",
   "scripts": {
+    "build": "tsc -p src/tsconfig.json",
     "test": "mocha tests/index.js"
   },
   "keywords": [
